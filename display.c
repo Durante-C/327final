@@ -64,16 +64,6 @@ void printBytes(char *str, unsigned int len) {
     done = false;
     IE2 |= UCA0TXIE; // Enable the Transmit interrupt
 
-//    txt = str + 1;
-//
-//    if (str[0] == '\0') {
-//        done = true;
-//        return;
-//    } else {
-//        done = false;
-//    }
-//
-//    UCA0TXBUF = *str;
 }
 
 
@@ -127,10 +117,5 @@ void __attribute__ ((interrupt(WDT_VECTOR))) watchdog_timer (void)
         UCA0TXBUF = txt[idx++];
     }
 
-//    if (*txt != '\0') {
-//        UCA0TXBUF = *txt++;
-//    } else {
-//        done = true;
-//    }
-//    IFG2 &= ~UCA0TXIFG;
+
 }

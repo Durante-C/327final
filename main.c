@@ -20,9 +20,9 @@
 #define TIMER_VAL_10S (char) ('0' + timer_val_10s)
 #define TIMER_VAL_1S (char) ('0' + timer_val_1s)
 
-char ipaddress[15] = "000.000.000.000"; // THIS VARIABLE STORES THE IP ADDRESS
-char ipstr1[3], ipstr2[3], ipstr3[3], ipstr4[3];
+char * ipaddress; // THIS VARIABLE STORES THE IP ADDRESS
 const char ip_address_str[12] = "IP ADDRESS:\r";
+char ip_length;   // Recieved from serial.c to properly trim displayed IP address
 
 const char newline[1] = "\r";
 
@@ -92,19 +92,12 @@ volatile int state = 0;
 int prev_state = 0;
 
 void main(void)
-    {
-    strcpy(ipstr1, byte2decimal(001));
-    strcpy(ipstr2, byte2decimal(002));
-    strcpy(ipstr3, byte2decimal(003));
-    strcpy(ipstr4, byte2decimal(004));
+{
 
-    ip_concat(ipaddress, ipstr1, ipstr2, ipstr3, ipstr4);
-
-
-    ENABLE_WDT;
+    ENABLE_WDT; //Necessary for command timer
 
     motor_setup();
-    set_motor_angle(90);
+    set_motor_angle(90); //Serves as the "neutral" position of the motor, returned to at end of commands.
     switch_setup();
     spi_setup();
 
@@ -114,15 +107,14 @@ void main(void)
 
     WAIT_DISPLAY; // Inefficient way to wait for the end of writing
 
-    set_display_color(WHITE);
+    set_display_color(WHITE);   //To ensure consistent back-lighting
 
     WAIT_DISPLAY;
 
     while(1){
         wakeup_flag = 0;
-
         clearDisplay();
-        WAIT_DISPLAY;
+        WAIT_DISPLAY;               //Note, must be used between writing each line to ensure no corruption
         set_display_color(WHITE);
         WAIT_DISPLAY;
 
@@ -151,11 +143,12 @@ void main(void)
                 break;
 
             case 1:
+                //Main menu, can scroll through any functionality
                 prev_state = 0;
 
-                menu_sel = modulo_check(menu_sel, 3);
+                menu_sel = modulo_check(menu_sel, 3); //Allows for continuous "endless" scrolling through options
 
-                switch(menu_sel) {
+                switch(menu_sel) {                    //Each case similar, displays different options when moved onto, can move on to actual command modes
                     case 0:
                         printBytes(setcustomtimer, sizeof(setcustomtimer) - 1);
                         WAIT_DISPLAY;
@@ -185,7 +178,9 @@ void main(void)
                     case 3:
                         printBytes(ip_address_str, 12);
                         WAIT_DISPLAY;
-                        printBytes(ipaddress, 15);
+                        ipaddress = ip_export();
+                        ip_length = len_export();
+                        printBytes(ipaddress, ip_length);
                         WAIT_DISPLAY;
                         LPM0;
                         break;
@@ -231,13 +226,14 @@ void main(void)
                 break;
 
             case 11:
+                //SETTING A TIMER
                 prev_state = 1;
                 menu_sel = modulo_check(menu_sel, 27);
 
                 printBytes(settimer, sizeof settimer - 1);
                 WAIT_DISPLAY;
 
-                switch(menu_sel) {
+                switch(menu_sel) {  //Need many options of timer lengths to display
                     case 0:
                         printBytes(sec10, 5);
                         ENDCASE;
@@ -351,7 +347,7 @@ void main(void)
                         ENDCASE;
 
                 }
-
+                //Carries over selection from this state to a subsequent states to choose action
                 IF_SEL{
                     timer_setting = menu_sel;
                     menu_sel = 0;
@@ -360,7 +356,7 @@ void main(void)
 
                 break;
 
-            case 12: // CHOOSE ON OR OFF OR PRANK
+            case 12: // CHOOSE ON OR OFF OR PRANK FOR TIMER
                 prev_state = 11;
                 menu_sel = modulo_check(menu_sel, 2);
 
@@ -381,7 +377,7 @@ void main(void)
                         break;
 
 
-                } // switch
+                }
 
 
                 WAIT_DISPLAY;

@@ -39,15 +39,19 @@ void set_motor_angle(int angle_deg){
      ENABLE_WDT;
 }
 
-void turn_on_light(){
-    set_motor_angle(ON_ANGLE);
+void turn_on_light(){               //Similar for turning off, motor moves to a designated position that may be specific to different light switches
+    set_motor_angle(135);
+    __delay_cycles(100000);         //Delay and...
+    set_motor_angle(90);            //immediate reset used to mitigate damage to the motor by pressing too hard against a switch continuously
 }
 
-void turn_off_light(){
-    set_motor_angle(OFF_ANGLE);
+void turn_off_light(){              //Analogous to turn_on_light()
+    set_motor_angle(80);
+    __delay_cycles(100000);
+    set_motor_angle(90);
 }
 
-void prank_light(){
+void prank_light(){                 //Repeatedly and pseudo-randomly turns the switch on and off, hopefully infuriating current room occupants
     int iterations, delay_cycle_counter;
     for (iterations = 0; iterations < 15; iterations++){
         if (iterations % 2 == 0){
@@ -74,19 +78,19 @@ void prank_light(){
 }
 
 
-void set_timer_mode(int mode){
+void set_timer_mode(int mode){              //Used for easier interfacing with main
     timer_behavior = mode;
 }
 
-int get_timer_mode(){
+int get_timer_mode(){                       //ditto above
     return timer_behavior;
 }
 
-void set_timer(int days, int hours, int min, int sec){
+void set_timer(int days, int hours, int min, int sec){      //Streamlines timer information for main
     wdt_timer_counter = (unsigned long) (1.5*(86400 * days + 3600 * hours + 60 * min + sec));
 }
 
-void update_timer(){
+void update_timer(){                                        //Fairly simple logic to emulate a countdown, performed whenever the timer is checked
     unsigned long timer_count = wdt_timer_counter / 1.5;
 
     timer_day = timer_count / 86400L;
@@ -127,6 +131,10 @@ void __attribute__ ((interrupt(WDT_VECTOR))) watchdog_timer (void)
 #error Compiler not supported!
 #endif
 {
+    /*
+     * Code in this interrupt is used for many useful features of our display including removing background color during inactivity, updating the timer via the WDT,
+     * and executing the command associated with a timer.
+     */
     if (wdt_cycle_counter == 1) {
         TA0CCR1 = 0;
     }

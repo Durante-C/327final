@@ -24,6 +24,7 @@ void switch_setup() {
 __interrupt void Port_2(void)
 #endif
 {
+    //Logic largely analogous to Simon PCB to detect button presses
     wdt_cycle_counter = 0;
 
     if ((P2IFG & UP_BTN_MASK) == UP_BTN_MASK) {
